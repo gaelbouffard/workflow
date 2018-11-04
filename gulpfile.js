@@ -4,6 +4,7 @@ var browserSync = require('browser-sync');
 var reload = browserSync.reload;
 var autoprefixer = require('gulp-autoprefixer');
 var clean = require('gulp-clean');
+var concat = require('gulp-concat');
 
 var path = {
   root: 'app/',
@@ -44,6 +45,7 @@ exports.styles = styles;
 function scripts() {
   cleanScripts();
   return gulp.src(path.js.src)
+    .pipe(concat('main.js'))
     .pipe(gulp.dest(path.js.dest))
 }
 
