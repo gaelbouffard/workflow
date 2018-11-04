@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/gaelbouffard/workflow#readme",
   "devDependencies": {
+    "browser-sync": "^2.26.3",
     "gulp": "^4.0.0",
     "gulp-sass": "^4.0.2"
   }
