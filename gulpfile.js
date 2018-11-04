@@ -3,6 +3,7 @@ var sass = require('gulp-sass');
 var browserSync = require('browser-sync');
 var reload = browserSync.reload;
 var autoprefixer = require('gulp-autoprefixer');
+var clean = require('gulp-clean');
 
 var path = {
   root: 'app/',
@@ -13,8 +14,23 @@ var path = {
     src: 'src/scss/*.scss',
     dest: 'app/css'
   },
-  js: 'app/js'
+  js: {
+    src: 'src/js/*.js',
+    dest: 'app/js'
+  }
 }
+
+function cleanHtml() {
+  return gulp.src(path.root + '*.html', {read: false, force: true})
+    .pipe(clean());
+}
+exports.cleanHtml = cleanHtml;
+
+function cleanScripts() {
+  return gulp.src(path.js.dest + '/*.js', {read: false, force: true})
+    .pipe(clean());
+}
+exports.cleanScripts = cleanScripts;
 
 function styles() {
   return gulp
@@ -25,8 +41,15 @@ function styles() {
 };
 exports.styles = styles;
 
+function scripts() {
+  cleanScripts();
+  return gulp.src(path.js.src)
+    .pipe(gulp.dest(path.js.dest))
+}
+
 function copy() {
-  gulp.src(path.html.src)
+  cleanHtml();
+  return gulp.src(path.html.src)
     .pipe(gulp.dest(path.root))
 }
 exports.copy = copy;
@@ -40,10 +63,11 @@ function serve(){
 }
 
 function watch(){
-  styles();
-  copy();
+
+  gulp.series(styles, scripts, gulp.parallel(cleanHtml, cleanScripts, copy));
   gulp.watch(path.styles.src, styles);
   gulp.watch(path.html.src, copy);
+  gulp.watch(path.js.src, scripts);
 }
 
 // exports.styles = styles;
