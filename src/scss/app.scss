@@ -1,5 +1,19 @@
-$black: #fff;
+$black: #000;
 
 body {
   background-color: $black;
+}
+
+h1 {
+  color: #ffffff;
+  &:hover {
+    transition: color 1s ease;
+  }
+}
+
+
+
+.main-sidebar {
+
+column-count: 2;
 }
