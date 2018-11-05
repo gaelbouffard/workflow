@@ -1,82 +1,96 @@
-var gulp = require('gulp');
-var sass = require('gulp-sass');
-var browserSync = require('browser-sync');
-var reload = browserSync.reload;
-var autoprefixer = require('gulp-autoprefixer');
-var clean = require('gulp-clean');
-var concat = require('gulp-concat');
+const gulp = require('gulp');
+const sass = require('gulp-sass');
+const browserSync = require("browser-sync").create();
+const postcss = require("gulp-postcss");
+const autoprefixer = require("autoprefixer");
+const cssnano = require("cssnano");
+const sourcemaps = require("gulp-sourcemaps");
+const del = require('gulp-clean');
+const concat = require('gulp-concat');
 
-var path = {
+const paths = {
   root: 'app/',
-  html: {
-    src: 'src/*.html'
+  src : {
+    index : 'app/',
+    html : 'app/*.html',
+    styles : 'app/styles/*.scss',
+    scripts : 'app/scripts/*.js'
   },
-  styles: {
-    src: 'src/scss/*.scss',
-    dest: 'app/css'
+  tmp : {
+    index : '.tmp/',
+    // html : '.tmp/*.html',
+    styles : '.tmp/styles/',
+    scripts : '.tmp/scripts/'
   },
-  js: {
-    src: 'src/js/*.js',
-    dest: 'app/js'
+  dist : {
+
   }
 }
 
+function clean() {
+  return gulp.src(paths.tmp.index, {read: false, force: true})
+    .pipe(del());
+}
+
 function cleanHtml() {
-  return gulp.src(path.root + '*.html', {read: false, force: true})
-    .pipe(clean());
+  return gulp.src(paths.tmp.index + '*.html', {read: false, force: true})
+    .pipe(del());
 }
 exports.cleanHtml = cleanHtml;
 
 function cleanScripts() {
-  return gulp.src(path.js.dest + '/*.js', {read: false, force: true})
-    .pipe(clean());
+  return gulp.src(paths.tmp.scripts + '*.js', {read: false, force: true})
+    .pipe(del());
 }
 exports.cleanScripts = cleanScripts;
 
 function styles() {
   return gulp
-    .src(path.styles.src)
-    .pipe(autoprefixer())
-    .pipe(sass({outputStyle: 'expanded'}).on('error', sass.logError))
-    .pipe(gulp.dest(path.styles.dest));
+    .src(paths.src.styles)
+    .pipe(sourcemaps.init())
+    .pipe(sass().on('error', sass.logError))
+    .pipe(postcss([autoprefixer(), cssnano()]))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest(paths.tmp.styles))
+    .pipe(browserSync.stream());
 };
 exports.styles = styles;
 
 function scripts() {
   cleanScripts();
-  return gulp.src(path.js.src)
+  return gulp.src(paths.src.scripts)
     .pipe(concat('main.js'))
-    .pipe(gulp.dest(path.js.dest))
+    .pipe(gulp.dest(paths.tmp.scripts))
 }
+exports.scripts = gulp.series(cleanScripts, scripts);
 
 function copy() {
   cleanHtml();
-  return gulp.src(path.html.src)
-    .pipe(gulp.dest(path.root))
+  return gulp.src(paths.src.html)
+    .pipe(gulp.dest(paths.tmp.index))
+    .pipe(browserSync.stream());
 }
-exports.copy = copy;
+exports.copy = gulp.series(cleanHtml, copy);
+
 
 function serve(){
-  browserSync.init([path.styles.dest + '/*.css', path.root + '/*.html', path.js + '/*.js'], {
+  browserSync.init({
     server: {
-      baseDir : path.root
+      baseDir : ['.tmp', 'app']
     }
-  })
+  });
+  gulp.watch(paths.src.styles, styles);
+  gulp.watch(paths.src.html, copy);
+  gulp.watch(paths.src.scripts, scripts);
 }
+exports.serve = gulp.series(styles, scripts, gulp.parallel(cleanHtml, cleanScripts, copy));
 
-function watch(){
+// function build(){
+// }
+// exports.build = build;
 
-  gulp.series(styles, scripts, gulp.parallel(cleanHtml, cleanScripts, copy));
-  gulp.watch(path.styles.src, styles);
-  gulp.watch(path.html.src, copy);
-  gulp.watch(path.js.src, scripts);
-}
-
-// exports.styles = styles;
-// exports.serve = serve;
-
-var build = gulp.series(gulp.parallel(serve, watch));
+exports.serve = gulp.series(clean, gulp.parallel(styles, scripts, copy), serve);
+// exports.default = gulp.series(clean, build);
 
 
-
-gulp.task('default', build);
+// gulp.task('default', build);

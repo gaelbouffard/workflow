@@ -1,0 +1,18 @@
+$black: #044400;
+
+@import "node_modules/uikit/src/scss/variables-theme.scss";
+@import "node_modules/uikit/src/scss/mixins-theme.scss";
+@import "node_modules/uikit/src/scss/uikit-theme.scss";
+
+body {
+  background-color: $black;
+}
+h1 {
+  color: #fff;
+  &:hover {
+    transition: color 1s ease;
+  }
+}
+.main-sidebar {
+  column-count: 2;
+}
